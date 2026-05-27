@@ -2,7 +2,6 @@
 
 import type { IUser } from '@/types/user'
 import type { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { Info, MoreHorizontal, SquarePen, Trash2 } from 'lucide-react'
 
@@ -53,36 +52,24 @@ export const UserColumns: ColumnDef<IUser>[] = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem className="text-green-500">
-            <Info className="mr-2 h-4 w-4" /> Detail
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            className="text-blue-500"
-            // onClick={() => onEdit(row.original)}
-          >
-            <SquarePen className="mr-2 h-4 w-4" /> Edit
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            className="text-red-500"
-            // onClick={() => onDelete(row.original)} // ✅ FIXED
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm"
+          
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm"
+          
+        >
+          <SquarePen className="h-4 w-4 text-blue-500" />
+        </Button>
+      </div> 
     ),
   },
 ]
