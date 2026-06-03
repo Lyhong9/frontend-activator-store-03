@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useCreateCategory, useUploadCategoryImage } from '@/hooks/useCategories'
 
 interface PreviewImage {
@@ -16,6 +17,7 @@ interface PreviewImage {
 export function CreateCategoryDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [isActive, setIsActive] = useState(true)
   const [images, setImages] = useState<PreviewImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,37 +46,37 @@ export function CreateCategoryDialog() {
     images.forEach(img => URL.revokeObjectURL(img.preview))
     setImages([])
     setName('')
+    setIsActive(true)
   }
 
-const handleSubmit = async () => {
-  if (!name.trim()) {
-    alert('Please enter a category name')
-    return
-  }
-
-  try {
-    // ✅ Response is { message, data: category } — extract data
-    const response = await createMutation.mutateAsync({ name })
-    const category = response.data  // ← this is the fix
-
-    if (images.length > 0 && category?.id) {
-      setIsUploading(true)
-      await Promise.all(
-        images.map(img =>
-          uploadMutation.mutateAsync({ categoryId: category.id, file: img.file })
-        )
-      )
-      setIsUploading(false)
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      alert('Please enter a category name')
+      return
     }
 
-    setOpen(false)
-    handleReset()
+    try {
+      const response = await createMutation.mutateAsync({ name, isActive })
+      const category = response.data
 
-  } catch (err: any) {
-    console.error('Error:', err?.response?.data)
-    setIsUploading(false)
+      if (images.length > 0 && category?.id) {
+        setIsUploading(true)
+        await Promise.all(
+          images.map(img =>
+            uploadMutation.mutateAsync({ categoryId: category.id, file: img.file })
+          )
+        )
+        setIsUploading(false)
+      }
+
+      setOpen(false)
+      handleReset()
+
+    } catch (err: any) {
+      console.error('Error:', err?.response?.data)
+      setIsUploading(false)
+    }
   }
-}
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) handleReset() }}>
@@ -101,6 +103,33 @@ const handleSubmit = async () => {
               onChange={e => setName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             />
+          </div>
+
+          {/* Status */}
+          <div className="grid gap-2">
+            <Label>Status</Label>
+            <Select
+              value={isActive ? 'active' : 'inactive'}
+              onValueChange={(val) => setIsActive(val === 'active')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                    Active
+                  </span>
+                </SelectItem>
+                <SelectItem value="inactive">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                    Inactive
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Image Upload */}

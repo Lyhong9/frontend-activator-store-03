@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useUpdateCategory, useUploadCategoryImage, useDeleteCategoryImage } from '@/hooks/useCategories'
 import type { ICategory } from '@/types/category'
 
@@ -22,8 +23,9 @@ interface Props {
 
 export function UpdateCategoryDialog({ isOpen, setIsOpen, category }: Props) {
   const [name, setName] = useState('')
+  const [isActive, setIsActive] = useState(true)
   const [existingImages, setExistingImages] = useState(category.categoryImages || [])
-  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])  // ✅ track pending deletes
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
   const [newImages, setNewImages] = useState<PreviewImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -32,19 +34,18 @@ export function UpdateCategoryDialog({ isOpen, setIsOpen, category }: Props) {
   const uploadMutation = useUploadCategoryImage()
   const deleteImageMutation = useDeleteCategoryImage()
 
-// With this — sync existingImages whenever category data changes:
-useEffect(() => {
-  if (isOpen) {
-    setName(category.name)
-    setDeletedImageIds([])
-    setNewImages([])
-  }
-}, [isOpen])
+  useEffect(() => {
+    if (isOpen) {
+      setName(category.name)
+      setIsActive(category.isActive ?? true)  // ✅ pre-fill status
+      setDeletedImageIds([])
+      setNewImages([])
+    }
+  }, [isOpen])
 
-// ✅ Separately sync images whenever category.categoryImages updates
-useEffect(() => {
-  setExistingImages(category.categoryImages || [])
-}, [category.categoryImages])
+  useEffect(() => {
+    setExistingImages(category.categoryImages || [])
+  }, [category.categoryImages])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -63,12 +64,10 @@ useEffect(() => {
     })
   }
 
-  // ✅ Just mark as deleted — no API call yet
   const handleMarkDeleteExistingImage = (imageId: string) => {
     setDeletedImageIds(prev => [...prev, imageId])
   }
 
-  // ✅ Undo mark — restore image from deleted list
   const handleRestoreImage = (imageId: string) => {
     setDeletedImageIds(prev => prev.filter(id => id !== imageId))
   }
@@ -78,6 +77,7 @@ useEffect(() => {
     setNewImages([])
     setDeletedImageIds([])
     setName('')
+    setIsActive(true)
   }
 
   const handleSubmit = async () => {
@@ -87,10 +87,10 @@ useEffect(() => {
     }
 
     try {
-      // Step 1: update name
+      // Step 1: update name + status
       await updateMutation.mutateAsync({
         categoryId: category.id,
-        request: { name },
+        request: { name, isActive },  // ✅ send isActive
       })
 
       // Step 2: delete marked images
@@ -128,6 +128,8 @@ useEffect(() => {
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+
+          {/* Image */}
           <div className="grid gap-2">
             <Label>Image</Label>
 
@@ -145,7 +147,6 @@ useEffect(() => {
                         isMarkedForDelete ? 'opacity-30 grayscale' : ''
                       }`}
                     />
-                    {/* X to mark for delete */}
                     {!isMarkedForDelete ? (
                       <Button
                         onClick={() => handleMarkDeleteExistingImage(img.id)}
@@ -154,7 +155,6 @@ useEffect(() => {
                         <X className="w-3 h-3" />
                       </Button>
                     ) : (
-                      // Undo button — click grayed image to restore
                       <Button
                         onClick={() => handleRestoreImage(img.id)}
                         className="absolute -top-2 -right-2 bg-gray-400 text-white rounded-full w-5 h-5 flex items-center justify-center shadow hover:bg-gray-500 transition p-0"
@@ -186,7 +186,6 @@ useEffect(() => {
 
             </div>
 
-            {/* Upload Button */}
             <Input
               ref={fileInputRef}
               type="file"
@@ -216,6 +215,34 @@ useEffect(() => {
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             />
           </div>
+
+          {/* Status */}
+          <div className="grid gap-2">
+            <Label>Status</Label>
+            <Select
+              value={isActive ? 'active' : 'inactive'}
+              onValueChange={(val) => setIsActive(val === 'active')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                    Active
+                  </span>
+                </SelectItem>
+                <SelectItem value="inactive">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                    Inactive
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
         </div>
 
         <DialogFooter>
