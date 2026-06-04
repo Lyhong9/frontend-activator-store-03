@@ -10,6 +10,7 @@ const DashBoardLayout = lazy(() => import("../layouts/DashBoardLayout"));
 const UserPage = lazy(() => import("../pages/UserPage"));
 const MainLayout = lazy(() => import("../layouts/MainLayout"));
 const LoginPage = lazy(() => import("../pages/LoginPage"));
+const SignupPage = lazy(() => import("../pages/SignupPage"));
 
 const Router = () => {
   return (
@@ -20,6 +21,7 @@ const Router = () => {
           <Route element={<MainLayout />}>
           {/* <Route path="/" element={<HomePage />} /> */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
           </Route>
 
           <Route element={<DashBoardLayout />}>
@@ -28,6 +30,8 @@ const Router = () => {
             <Route path="/admin/products" element={<ProductPage />} />
             <Route path="/admin/categories" element={<CategoryPage />} />
             <Route path="/admin/users" element={<UserPage />} />
+            <Route path="/admin/login" element={<LoginPage />} />
+            <Route path="/admin/signup" element={<SignupPage />} />
           </Route>
 
           <Route path="*" element={<h1>404 Not Found!</h1>} />

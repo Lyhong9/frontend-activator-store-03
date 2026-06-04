@@ -55,6 +55,22 @@ const data = {
         />
       ),
     },
+    {
+      title: "Login",
+      url: "/admin/login",
+      icon: (
+        <UsersIcon
+        />
+      ),
+    },
+    {
+      title: "Signup",
+      url: "/admin/signup",
+      icon: (
+        <UsersIcon
+        />
+      ),
+    },
   ],
   navClouds: [
     {
