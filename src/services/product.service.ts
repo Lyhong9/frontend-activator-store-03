@@ -9,3 +9,39 @@ export const getProducts = async (params?: { search?: string; page?: number; lim
   const data = await res.json();
   return data;
 };
+
+
+export const createProduct = async (request: any) => {
+  const res = await fetch('http://localhost:3000/api/v1/products', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+  const data = await res.json();
+  return data; // ← returns { message: '...', data: { id, name, ... } }
+};
+
+export const uploadProductImage = async (productId: string, file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`http://localhost:3000/api/v1/products/${productId}/upload`, {
+    method: 'POST',
+    body: formData,
+    // ⚠️ Do NOT set Content-Type header — browser sets it automatically with boundary
+  });
+
+  const data = await res.json();
+  return data;
+};
+
+export const deleteProduct = async (productId: string) => {
+  const res = await fetch(`http://localhost:3000/api/v1/products/${productId}`, {
+    method: "DELETE",
+  });
+
+  const data = await res.json();
+  return data;
+};

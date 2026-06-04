@@ -1,12 +1,11 @@
 import { ProductColumns } from "@/components/products/ProductColumns";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/users/data-table"
 import { useProducts } from "@/hooks/useProducts";
-import { CirclePlus } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState } from "react";
+import { CreateProductDialog } from "@/components/products/CreateProductDialog";
 
 const ProductPage = () => {
     const [search, setSearch] = useState('')
@@ -36,10 +35,7 @@ const ProductPage = () => {
             setPage(1) // reset to page 1 on new search
           }}
         />
-        <Button>
-          <CirclePlus />
-          Create Product
-        </Button>
+        <CreateProductDialog />
       </div>
       <DataTable columns={ProductColumns} data={data?.data ?? []} />
       <Pagination className="flex justify-end mt-3">

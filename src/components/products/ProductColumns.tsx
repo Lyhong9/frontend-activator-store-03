@@ -4,6 +4,9 @@ import type { IProduct } from '@/types/product';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '../ui/button';
 import { SquarePen, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useDeleteProduct } from '@/hooks/useProducts';
+import ConfirmDelete from './ConfirmDelete';
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -56,28 +59,55 @@ export const ProductColumns: ColumnDef<IProduct>[] = [
       </span>
     ),
   },
-   {
+  {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm"
-          
-        >
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm"
-          
-        >
-          <SquarePen className="h-4 w-4 text-blue-500" />
-        </Button>
-      </div> 
-    ),
+    cell: ({ row }) => <ActionCell row={row} />,
   },
 ];
+
+function ActionCell({ row }: { row: any }) {
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  // const [isUpdateOpen, setIsUpdateOpen] = useState(false);  // ← add this
+  const deleteMutation = useDeleteProduct();
+
+  const handleConfirmDelete = (id: number) => {
+    deleteMutation.mutate(id);
+    setIsDeleteOpen(false);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+
+      {/* Delete Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm"
+        onClick={() => setIsDeleteOpen(true)}
+      >
+        <Trash2 className="h-4 w-4 text-red-500" />
+      </Button>
+
+      {/* Edit Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm"
+        // onClick={() => setIsUpdateOpen(true)}  // ← add this
+      >
+        <SquarePen className="h-4 w-4 text-blue-500" />
+      </Button>
+
+      <ConfirmDelete
+        isOpen={isDeleteOpen}
+        setIsOpen={setIsDeleteOpen}
+        product={row.original}
+        confirmDeleteProduct={handleConfirmDelete}
+      />
+
+      {/* Update Dialog */}
+
+    </div>
+  );
+}
