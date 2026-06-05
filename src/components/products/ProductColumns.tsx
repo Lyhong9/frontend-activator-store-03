@@ -7,6 +7,7 @@ import { SquarePen, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useDeleteProduct } from '@/hooks/useProducts';
 import ConfirmDelete from './ConfirmDelete';
+import { UpdateProductDialog } from './UpdateProductDialog';
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -67,19 +68,17 @@ export const ProductColumns: ColumnDef<IProduct>[] = [
 ];
 
 function ActionCell({ row }: { row: any }) {
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  // const [isUpdateOpen, setIsUpdateOpen] = useState(false);  // ← add this
-  const deleteMutation = useDeleteProduct();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false)  // ← uncomment
+  const deleteMutation = useDeleteProduct()
 
   const handleConfirmDelete = (id: number) => {
-    deleteMutation.mutate(id);
-    setIsDeleteOpen(false);
-  };
+    deleteMutation.mutate(id)
+    setIsDeleteOpen(false)
+  }
 
   return (
     <div className="flex items-center gap-2">
-
-      {/* Delete Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -89,12 +88,11 @@ function ActionCell({ row }: { row: any }) {
         <Trash2 className="h-4 w-4 text-red-500" />
       </Button>
 
-      {/* Edit Button */}
       <Button
         variant="ghost"
         size="icon"
         className="border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm"
-        // onClick={() => setIsUpdateOpen(true)}  // ← add this
+        onClick={() => setIsUpdateOpen(true)}  // ← uncomment
       >
         <SquarePen className="h-4 w-4 text-blue-500" />
       </Button>
@@ -107,7 +105,11 @@ function ActionCell({ row }: { row: any }) {
       />
 
       {/* Update Dialog */}
-
+      <UpdateProductDialog
+        isOpen={isUpdateOpen}
+        setIsOpen={setIsUpdateOpen}
+        product={row.original}
+      />
     </div>
-  );
+  )
 }

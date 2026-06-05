@@ -8,6 +8,7 @@ import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useCreateProduct, useUploadProductImage } from '@/hooks/useProducts'
+import { useCategories } from '@/hooks/useCategories'
 
 interface PreviewImage {
   file: File
@@ -17,6 +18,9 @@ interface PreviewImage {
 export function CreateProductDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [price, setPrice] = useState('')
+  const [qty, setQty] = useState('')
+  const [categoryId, setCategoryId] = useState<string>('')
   const [isActive, setIsActive] = useState(true)
   const [images, setImages] = useState<PreviewImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -24,6 +28,8 @@ export function CreateProductDialog() {
 
   const createMutation = useCreateProduct()
   const uploadMutation = useUploadProductImage()
+  const { data: categoriesData } = useCategories({ limit: 100 })
+  const categories = categoriesData?.data ?? []
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -46,24 +52,31 @@ export function CreateProductDialog() {
     images.forEach(img => URL.revokeObjectURL(img.preview))
     setImages([])
     setName('')
+    setPrice('')
+    setQty('')
+    setCategoryId('')
     setIsActive(true)
   }
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      alert('Please enter a product name')
-      return
-    }
+    if (!name.trim()) return alert('Please enter a product name')
+    if (!categoryId) return alert('Please select a category')
 
     try {
-      const response = await createMutation.mutateAsync({ name, isActive })
-      const category = response.data
+      const response = await createMutation.mutateAsync({
+        name,
+        isActive,
+        price: price ? parseFloat(price) : undefined,
+        qty: qty ? parseInt(qty) : undefined,
+        categoryId: parseInt(categoryId),
+      })
+      const product = response.data
 
-      if (images.length > 0 && category?.id) {
+      if (images.length > 0 && product?.id) {
         setIsUploading(true)
         await Promise.all(
           images.map(img =>
-            uploadMutation.mutateAsync({ productId: category.id, file: img.file })
+            uploadMutation.mutateAsync({ productId: product.id, file: img.file })
           )
         )
         setIsUploading(false)
@@ -71,7 +84,6 @@ export function CreateProductDialog() {
 
       setOpen(false)
       handleReset()
-
     } catch (err: any) {
       console.error('Error:', err?.response?.data)
       setIsUploading(false)
@@ -105,6 +117,49 @@ export function CreateProductDialog() {
             />
           </div>
 
+          {/* Category */}
+          <div className="grid gap-2">
+            <Label>Category</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat: any) => (
+                  <SelectItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Price & Qty */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label>Price</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={price}
+                onChange={e => setPrice(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Quantity</Label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                value={qty}
+                onChange={e => setQty(e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* Status */}
           <div className="grid gap-2">
             <Label>Status</Label>
@@ -135,7 +190,6 @@ export function CreateProductDialog() {
           {/* Image Upload */}
           <div className="grid gap-2">
             <Label>Images</Label>
-
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {images.map((img, index) => (
@@ -155,7 +209,6 @@ export function CreateProductDialog() {
                 ))}
               </div>
             )}
-
             <Input
               ref={fileInputRef}
               type="file"
@@ -178,18 +231,9 @@ export function CreateProductDialog() {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={createMutation.isPending || isUploading}
-          >
-            {createMutation.isPending
-              ? 'Creating...'
-              : isUploading
-              ? 'Uploading...'
-              : 'Create'}
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={createMutation.isPending || isUploading}>
+            {createMutation.isPending ? 'Creating...' : isUploading ? 'Uploading...' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>

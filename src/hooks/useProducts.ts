@@ -1,4 +1,4 @@
-import { createProduct, deleteProduct, getProducts, uploadProductImage } from "@/services/product.service";
+import { createProduct, deleteProduct, deleteProductImage, getProducts, updateProduct, uploadProductImage } from "@/services/product.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useProducts = (params?: { search?: string; page?: number; limit?: number }) => {
@@ -35,6 +35,27 @@ export const useDeleteProduct = () => {
     mutationFn: deleteProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, request }: { productId: string; request: any }) =>
+      updateProduct(productId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+};
+
+export const useDeleteProductImage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (imageId: string) => deleteProductImage(imageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] }); // ✅ must have this
     },
   });
 };
